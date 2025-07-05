@@ -1,4 +1,4 @@
-[!header] (https://capsule-render.vercel.app/api?type=venom&height=300&color=gradient&text=Talk%20to%20the%20Artifact&fontColor=black&textBg=false&fontSize=70&animation=fadeIn)
+![header](https://capsule-render.vercel.app/api?type=venom&height=300&color=gradient&text=Talk%20to%20the%20Artifact&fontColor=black&textBg=false&fontSize=70&animation=fadeIn)
 
 > 관람객의 질문에 유물이 응답하는, 감성 대화 기반 AI 전시 시스템
 
