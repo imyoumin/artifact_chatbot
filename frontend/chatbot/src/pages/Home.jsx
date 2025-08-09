@@ -11,7 +11,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   const handleNext = () => {
-    if (step < 3) {
+    if (step < 4) {
       setStep(step + 1);
     } else {
       navigate('/chat');
@@ -84,14 +84,40 @@ export default function Home() {
         </>
       )}
 
+      {step === 4 && (
+        <>
+          <Title>안내드립니다</Title>
+          <Subtitle>유물과의 대화는 소중한 기록입니다</Subtitle>
+
+          <NoticeCard>
+            <NoticeIcon src={require('../assets/info.png')} alt="안내 아이콘" />
+            <p>
+              유물과 나누는 대화는<br />
+              <Highlight>더 나은 경험을 만들기 위한 소중한 기록</Highlight>이 됩니다.
+            </p>
+            <p>
+              모든 대화 내용은 별도의 데이터베이스에 저장되며,<br />
+              <Highlight>전시 개선 및 연구 목적</Highlight>에 한해 활용될 수 있습니다.
+            </p>
+            <p>
+              <Highlight>개인 정보는 수집되지 않으며,</Highlight><br />
+              대화 내용은 <Highlight>익명으로 안전하게 처리</Highlight>됩니다.
+            </p>
+            <p>
+              안심하고 유물과 대화를 시작해보세요.
+            </p>
+          </NoticeCard>
+        </>
+      )}
+
+
       {/* 페이지 인디케이터 (클릭 가능) */}
       <PageIndicator step={step} onDotClick={setStep} />
 
-      {/* 이전 / 다음 버튼 */}
       <ButtonWrapper>
         {step > 1 && <PreviousButton onClick={handlePrevious}>이전</PreviousButton>}
         <NextButton onClick={handleNext}>
-          {step < 3 ? '다음' : '유물과 대화해보기'}
+          {step < 4 ? '다음' : '유물과 대화해보기'}
         </NextButton>
       </ButtonWrapper>
     </Container>
@@ -161,7 +187,7 @@ const QuestionBox = styled.div`
 const PageIndicator = ({ step, onDotClick }) => {
   return (
     <IndicatorWrapper>
-      {[1, 2, 3].map((num) => (
+      {[1, 2, 3, 4].map((num) => (
         <Dot
           key={num}
           active={step === num}
@@ -190,7 +216,31 @@ const Dot = styled.div`
   cursor: pointer;
 `;
 
+// 안내창
+const NoticeCard = styled.div`
+  background-color: #1e293b;
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  text-align: left;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-top: 1rem;
+`;
 
+const NoticeIcon = styled.img`
+  width: 30px;
+  height: 30px;
+  margin: 0 auto 1rem;
+  display: block;
+  filter: brightness(0) invert(1);
+`;
+
+const Highlight = styled.span`
+  font-weight: bold;
+  color: #b6a089;
+`;
 
 // 버튼 영역
 const ButtonWrapper = styled.div`

@@ -1,17 +1,23 @@
 // src/pages/ChatPage.jsx
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiMenu, FiVolume2, FiSend } from 'react-icons/fi';
-import { FiEye, FiCornerUpLeft } from 'react-icons/fi'; //  드롭 아이콘
+import { FiMenu, FiVolume2, FiVolumeX, FiSend, FiEye, FiCornerUpLeft, FiTrash2 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('chat_messages');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // 메뉴 상태
-  const navigate = useNavigate();   
+  const [isVolumeOn, setIsVolumeOn] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const navigate = useNavigate(); 
 
+  // 사용자 ID 설정
   useEffect(() => {
   const storedId = localStorage.getItem('user_id');
   if (!storedId) {
@@ -27,7 +33,11 @@ export default function ChatPage() {
   console.log("현재 fetch URL: http://127.0.0.1:8000/chat"); // ← 디버깅용 로그
 
   const userMessage = { sender: 'user', text: input };
-  setMessages((prev) => [...prev, userMessage]);
+  setMessages((prev) => {
+      const updated = [...prev, userMessage];
+      localStorage.setItem('chat_messages', JSON.stringify(updated));
+      return updated;
+    });
   setInput('');
   setIsTyping(true);
 
@@ -45,29 +55,50 @@ export default function ChatPage() {
 
     const data = await res.json();
 
-    setMessages((prev) => [
-      ...prev,
-      { sender: 'gpt', text: data.response, audio_url: data.audio_url },
-    ]);
+    const gptMessage = {
+      sender: 'gpt',
+      text: data.response,
+      audio_url: data.audio_url,
+    };
 
-    // 음성 응답 자동 재생
-    if (data.audio_url) {
-      const audio = new Audio(data.audio_url);
-      audio.play().catch(err => console.error('오디오 재생 실패:', err));
+    setMessages((prev) => {
+      const updated = [...prev, gptMessage];
+      localStorage.setItem('chat_messages', JSON.stringify(updated));
+      return updated;
+    });
+
+      // 오디오 재생 처리
+      if (data.audio_url && isVolumeOn) {
+        const audio = new Audio(data.audio_url);
+        setIsSpeaking(true);
+
+        audio.play()
+          .then(() => {
+            audio.onended = () => setIsSpeaking(false);
+          })
+          .catch((err) => {
+            console.error('오디오 재생 실패:', err);
+            setIsSpeaking(false);
+          });
+
+        audio.onerror = () => {
+          console.error('오디오 재생 오류 발생');
+          setIsSpeaking(false);
+        };
+      }
+
+    } catch (err) {
+      console.error('API 요청 실패:', err);
+      const errorMessage = { sender: 'gpt', text: '죄송합니다. 응답을 가져오는 데 실패했어요.' };
+      setMessages((prev) => {
+        const updated = [...prev, errorMessage];
+        localStorage.setItem('chat_messages', JSON.stringify(updated));
+        return updated;
+      });
+    } finally {
+      setIsTyping(false);
     }
-
-  } catch (err) {
-    console.error('API 요청 실패:', err);
-    setMessages((prev) => [
-      ...prev,
-      { sender: 'gpt', text: '죄송합니다. 응답을 가져오는 데 실패했어요.' },
-    ]);
-  } finally {
-    setIsTyping(false);
-  }
-};
-
-
+  };
 
   return (
     <ChatContainer>
@@ -75,7 +106,21 @@ export default function ChatPage() {
         <MenuButton onClick={() => setMenuOpen(!menuOpen)}>
           <FiMenu size={22} />
         </MenuButton>
-        <FiVolume2 size={20} />
+
+        {isVolumeOn ? (
+          <FiVolume2
+            size={20}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setIsVolumeOn(false)}
+          />
+        ) : (
+          <FiVolumeX
+            size={20}
+            style={{ cursor: 'pointer', opacity: 0.6 }}
+            onClick={() => setIsVolumeOn(true)}
+          />
+        )}
+
         {menuOpen && (
           <DropdownMenu>
             <MenuItem onClick={() => navigate('/detail')}>
@@ -84,6 +129,17 @@ export default function ChatPage() {
             <MenuItem onClick={() => setMenuOpen(false)}>
               <FiCornerUpLeft /> 다시 대화로 돌아가기
             </MenuItem>
+
+            {/* 대화 초기화 메뉴 항목 추가 */}
+            <MenuItem
+            onClick={() => {
+              sessionStorage.removeItem('chat_messages'); 
+              setMessages([]);                             
+              setMenuOpen(false);                          
+            }}
+          >
+            <FiTrash2 /> 대화 초기화
+          </MenuItem>
           </DropdownMenu>
         )}
       </TopBar>
@@ -99,7 +155,7 @@ export default function ChatPage() {
               {/* GPT 답변이고 audio_url이 있을 때만 스피커 버튼 추가 */}
               {msg.sender === 'gpt' && msg.audio_url && (
                 <SpeakerButton onClick={() => {
-                    console.log("재생할 오디오 URL:", msg.audio_url);
+                    if (!isVolumeOn) return;
                     const audio = new Audio(msg.audio_url);
                     audio.play().catch(err => console.error('오디오 재생 실패:', err));
                   }}
@@ -111,8 +167,10 @@ export default function ChatPage() {
           ))
         )}
         {isTyping && <TypingIndicator />}
+        
       </MessagesArea>
 
+      {isSpeaking && <TypingAlert>🗣 유물이 말하고 있어요...</TypingAlert>}
 
       <InputArea>
         <StyledInput
@@ -309,5 +367,23 @@ const SpeakerButton = styled.button`
 
   &:hover {
     opacity: 0.8;
+  }
+`;
+
+const TypingAlert = styled.div`
+  background-color: #1f2937;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  text-align: center;
+  margin: 0 auto 0.4rem auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  width: fit-content;
+  animation: fadeIn 0.3s ease-in-out;
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 `;
