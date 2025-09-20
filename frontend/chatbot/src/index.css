@@ -1,13 +1,17 @@
+/* Google Fonts 불러오기 */
+@import url('https://fonts.googleapis.com/css2?family=SeoulHangang+CL:wght@400;500;700&display=swap');
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  line-height: normal;
+  background-color: #0f1722; /* 배경색 (Home.jsx와 통일) */
+  color: #FFFFFF;            /* 기본 텍스트 색상 */
+  font-family: 'SeoulHangang CL', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: 'Courier New', monospace;
+  color: #b6a089; /* code 블럭에 살짝 강조 색상 */
 }
